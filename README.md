@@ -246,14 +246,14 @@ heketi-cli topology load --json=topology-sample.json
 
     ---  
     apiVersion: v1
-	kind: Secret
-	metadata:
-	  name: heketi-secret
-	  namespace: esdata
-	data:
-	  # base64 encoded password. E.g.: echo -n "mypassword" | base64
-	   key: TFRTTkd6TlZJOEpjUndZNg==
-	type: kubernetes.io/glusterfs  
+    kind: Secret
+    metadata:
+       name: heketi-secret
+       namespace: esdata
+    data:
+     # base64 encoded password. E.g.: echo -n "mypassword" | base64
+       key: TFRTTkd6TlZJOEpjUndZNg==
+    type: kubernetes.io/glusterfs  
 
 
 ```    
