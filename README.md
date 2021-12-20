@@ -56,7 +56,7 @@ https://github.com/gluster/gluster-kubernetes.git
 >> ```systemctl enable glusterfs-server```
 
 > 2、 宿主机(master节点)上执行，或者任一节点
->> 执行  
+>> 执行(在k8s-01上执行以下命令)  
 >> ```gluster peer probe k8s-02```      
 >> ```gluster peer probe k8s-03```
 
