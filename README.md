@@ -263,19 +263,19 @@ heketi-cli topology load --json=topology-sample.json
 ```yaml  
     
 	   kind: PersistentVolumeClaim
-		apiVersion: v1
-		metadata:
-		  name: es-data-pvc
-		  namespace: esdata
-		  annotations:
-		    volume.beta.kubernetes.io/storage-class: "glusterfs-test-zrj"
-		spec:
-		  accessModes:
-		    - ReadWriteMany
-		  resources:
-		    requests:
-		      storage: 2Gi
-		  #storageClassName: glusterfs-test-zrj  
+	   apiVersion: v1
+	   metadata:
+	     name: es-data-pvc
+	     namespace: esdata
+     	     annotations:
+	        volume.beta.kubernetes.io/storage-class: "glusterfs-test-zrj"
+	   spec:
+	     accessModes:
+		- ReadWriteMany
+	     resources:
+		requests:
+		  storage: 2Gi
+	     #storageClassName: glusterfs-test-zrj  
   
 ```  
   
