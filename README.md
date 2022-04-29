@@ -1,3 +1,141 @@
+# 1. 镜像下载
+
+```shell    
+
+#!/bin/bash    
+images=(   
+	kube-apiserver:v1.23.4   
+	kube-proxy:v1.23.4   
+	kube-controller-manager:v1.23.4   
+	kube-scheduler:v1.23.4   
+	coredns:v1.8.6    
+	etcd:3.5.1-0    
+	pause:3.6   
+)   
+for imageName in ${images[@]} ; do    
+docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/$imageName    
+done    
+  
+```    
+## 处理镜像下载失败
+
+> docker pull cnplat/kube-controller-manager:v1.23.4   
+> docker pull cnplat/kube-apiserver:v1.23.4    
+> docker pull cangyin/etcd:3.5.1-0     
+> docker tag cnplat/kube-apiserver:v1.23.4 registry.cn-hangzhou.aliyuncs.com/google_containers/kube-apiserver:v1.23.4    
+> docker tag cnplat/kube-controller-manager:v1.23.4 registry.cn-hangzhou.aliyuncs.com/google_containers/kube-controller-manager:v1.23.4     
+> docker tag cangyin/etcd:3.5.1-0 registry.cn-hangzhou.aliyuncs.com/google_containers/etcd:3.5.1-0
+
+
+
+# 2.配置
+
+> 集群节点和master节点都要设置/etc/hosts
+> vim /etc/hosts     
+> ip                 k8s-node1   
+> ip                 k8s-master   
+> ip                 k8s-node2
+>
+
+## 2.1 配置内核参数，将桥接的IPv4流量传递到iptables的链
+> cat <<EOF | tee /etc/sysctl.d/k8s.conf    
+> net.bridge.bridge-nf-call-ip6tables = 1     
+> net.bridge.bridge-nf-call-iptables = 1     
+> EOF
+### 2.1.1 手动加载配置文件
+> sysctl --system
+## 2，2 防火墙关闭
+> systemctl stop firewalld   
+> systemctl disable firewalld
+## 2.3 将 SELinux 设置为 permissive 模式（相当于将其禁用）
+> setenforce 0     
+> sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+## 2.4 关闭交换空间
+> swapoff -a   
+> sed -i 's/.*swap.*/#&/' /etc/fstab
+## 2.5 设置时区
+> timedatectl set-timezone Asia/Shanghai
+#### 2.5.1 将当前的 UTC 时间写入硬件时钟
+
+> timedatectl set-local-rtc 0
+
+#### 2.5.2 重启依赖于系统时间的服务
+
+> systemctl restart rsyslog    
+> systemctl restart crond
+
+# 3. k8s集群搭建
+
+## 3.1 安装kubelet、kubeadm、kubectl
+
+### 3.1.1 设置kubernetes.repo
+
+> cat > /etc/yum.repos.d/kubernetes.repo << EOF   
+> [kubernetes]    
+> name=Kubernetes   
+> baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64   
+> enabled=1   
+> gpgcheck=0   
+> repo_gpgcheck=0   
+> gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg    
+> EOF
+>
+
+### 3.1.2 安装
+
+> yum install -y kubelet-1.23.4  kubeadm-1.23.4  kubectl-1.23.4
+>
+### 3.1.3 设置重启
+
+> systemctl enable kubelet
+
+## 3.2 初始化集群
+
+> kubeadm init \   
+> --apiserver-advertise-address=172.31.210.220 \    
+>  --image-repository registry.cn-hangzhou.aliyuncs.com/google_containers \   
+> --kubernetes-version v1.23.4 \   
+> --pod-network-cidr=10.244.0.0/16   
+> --service-cidr=10.96.0.0/12 \   
+> --ignore-preflight-errors=all
+
+> 执行成功后安装流程执行  
+> mkdir -p $HOME/.kube    
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config     
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+### 3.2.1 节点加入到master
+> kubeadm join 172.31.210.220:6443 --token qai2i3.mmgbn9e6kfw3q7qy \   
+> --discovery-token-ca-cert-hash sha256:c8133ab7035649296a283f63fbc836eae3468ad0770b3a39a091b04d81261ee4
+
+### 3.2.2 安装网络组件（仅在master上执行）
+
+> wget https://docs.projectcalico.org/manifests/calico.yaml
+
+> vim calico.yaml  
+> 搜索 CALICO_IPV4POOL_CIDR  
+> 将对应的value的地址改成kubeadm init 的pod-network-cidr所对呀的IP
+
+> kubectl apply -f calico.yaml   
+> 等待网络组件安装完毕  
+> kubectl get node 集群搭建完毕
+
+# 4. k8s卸载
+
+> kubeadm reset -f   
+> rm -rvf $HOME/.kube    
+> rm -rvf ~/.kube/    
+> rm -rvf /etc/kubernetes/   
+> rm -rvf /etc/systemd/system/kubelet.service.d   
+> rm -rvf /etc/systemd/system/kubelet.service   
+> rm -rvf /usr/bin/kube*   
+> rm -rvf /etc/cni   
+> rm -rvf /opt/cni   
+> rm -rvf /var/lib/etcd   
+> rm -rvf /var/etcd   
+> yum remove kube*
+
+
 # glusterfs集群搭建
 
 > 前言，目前网络上给出的glusterfs的部署有三种方式：
@@ -52,8 +190,8 @@ https://github.com/gluster/gluster-kubernetes.git
 >
 >> 启动
 
->> ```systemctl start glusterfs-server```   
->> ```systemctl enable glusterfs-server```
+>> ```systemctl start glusterd```   
+>> ```systemctl enable glusterd```
 
 > 2、 宿主机(master节点)上执行，或者任一节点
 >> 执行  
