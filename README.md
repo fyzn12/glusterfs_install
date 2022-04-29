@@ -1,4 +1,4 @@
-# 1. 镜像下载
+# 1. 镜像下载(集群节点都需要下载一下7个镜像)
 
 ```shell    
 
@@ -28,7 +28,7 @@ done
 
 
 
-# 2.配置
+# 2.配置(所有节点都要配置)
 
 > 集群节点和master节点都要设置/etc/hosts
 > vim /etc/hosts     
@@ -68,7 +68,7 @@ done
 
 ## 3.1 安装kubelet、kubeadm、kubectl
 
-### 3.1.1 设置kubernetes.repo
+### 3.1.1 设置kubernetes.repo(all node)
 
 > cat > /etc/yum.repos.d/kubernetes.repo << EOF   
 > [kubernetes]    
@@ -81,7 +81,7 @@ done
 > EOF
 >
 
-### 3.1.2 安装
+### 3.1.2 安装(all node)
 
 > yum install -y kubelet-1.23.4  kubeadm-1.23.4  kubectl-1.23.4
 >
@@ -89,7 +89,7 @@ done
 
 > systemctl enable kubelet
 
-## 3.2 初始化集群
+## 3.2 初始化集群(only master)
 
 > kubeadm init \   
 > --apiserver-advertise-address=172.31.210.220 \    
@@ -104,11 +104,11 @@ done
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config     
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-### 3.2.1 节点加入到master
+### 3.2.1 节点加入到master(only node)
 > kubeadm join 172.31.210.220:6443 --token qai2i3.mmgbn9e6kfw3q7qy \   
 > --discovery-token-ca-cert-hash sha256:c8133ab7035649296a283f63fbc836eae3468ad0770b3a39a091b04d81261ee4
 
-### 3.2.2 安装网络组件（仅在master上执行）
+### 3.2.2 安装网络组件（仅在master上执行 only master）
 
 > wget https://docs.projectcalico.org/manifests/calico.yaml
 
@@ -120,7 +120,7 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 > 等待网络组件安装完毕  
 > kubectl get node 集群搭建完毕
 
-# 4. k8s卸载
+# 4. k8s卸载(all)
 
 > kubeadm reset -f   
 > rm -rvf $HOME/.kube    
@@ -149,7 +149,7 @@ https://github.com/gluster/gluster-kubernetes.git
 
 > ## 1、部署glusterfs前准备工作
 
-> 1、磁盘：
+> 1、磁盘：(all node)
 
 >> 将磁盘格式化：mkfs.xfs -i size=512 /dev/sdb
 
@@ -161,7 +161,7 @@ https://github.com/gluster/gluster-kubernetes.git
 
       上面这个命令去除格式化造成的一些痕迹，恢复原始盘的状态。   
 
-> 2、节点准备
+> 2、节点准备 (all node)
 >> 设置/etc/hosts文件下的节点ip值（用内网ip）域名用主机名如下：
 
 ```xml  
@@ -171,7 +171,7 @@ https://github.com/gluster/gluster-kubernetes.git
 
 ```    
 
-> 3、关闭系统配置
+> 3、关闭系统配置(all node)
 
 
 >> 关闭防火墙   
