@@ -48,11 +48,11 @@ done
 > systemctl stop firewalld   
 > systemctl disable firewalld
 ## 2.3 将 SELinux 设置为 permissive 模式（相当于将其禁用）
-> setenforce 0     
-> sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+> setenforce 0(临时)     
+> sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config(永久)
 ## 2.4 关闭交换空间
-> swapoff -a   
-> sed -i 's/.*swap.*/#&/' /etc/fstab
+> swapoff -a (临时)   
+> sed -i 's/.*swap.*/#&/' /etc/fstab (永久)
 ## 2.5 设置时区
 > timedatectl set-timezone Asia/Shanghai
 #### 2.5.1 将当前的 UTC 时间写入硬件时钟
@@ -138,7 +138,7 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # glusterfs集群搭建
 
-> 前言，目前网络上给出的glusterfs的部署有三种方式：       
+> 前言，目前网络上给出的glusterfs的部署有三种方式：
 > 1、	在kubernetes中部署glusterfs-server     
 > 2、	基于gluster-kubernetes源码部署      
 https://github.com/gluster/gluster-kubernetes.git       
@@ -194,7 +194,7 @@ https://github.com/gluster/gluster-kubernetes.git
 >> ```systemctl enable glusterd```
 
 > 2、 宿主机(master节点)上执行，或者任一节点
->> 执行(在k8s-01上执行以下命令)  
+>> 执行  
 >> ```gluster peer probe k8s-02```      
 >> ```gluster peer probe k8s-03```
 
@@ -364,34 +364,34 @@ heketi-cli topology load --json=topology-sample.json
 
 ```yaml  
    
-	apiVersion: storage.k8s.io/v1
-	kind: StorageClass
-	metadata:
-	  name: glusterfs-test-zrj
-	  namespace: esdata
-	provisioner: kubernetes.io/glusterfs
-	parameters:
-	  resturl: "http://172.17.0.24:18080"
-	  clusterid: "1b919fc46fe70fbbdb64ab2c49c03657"
-	  restauthenabled: "true"
-	  restuser: "admin"
-	  secretNamespace: "esdata"
-	  secretName: "heketi-secret"
-	  #restuserkey: "adminkey"
-	  #gidMin: "10000"
-	  #gidMax: "50000"
-	  volumetype: "replicate:2"     
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+   name: glusterfs-test-zrj
+   namespace: esdata
+provisioner: kubernetes.io/glusterfs
+parameters:
+   resturl: "http://172.17.0.24:18080"
+   clusterid: "1b919fc46fe70fbbdb64ab2c49c03657"
+   restauthenabled: "true"
+   restuser: "admin"
+   secretNamespace: "esdata"
+   secretName: "heketi-secret"
+   #restuserkey: "adminkey"
+   #gidMin: "10000"
+   #gidMax: "50000"
+   volumetype: "replicate:2"     
 
     ---  
-    apiVersion: v1
-    kind: Secret
-    metadata:
-       name: heketi-secret
-       namespace: esdata
-    data:
-     # base64 encoded password. E.g.: echo -n "mypassword" | base64
-       key: TFRTTkd6TlZJOEpjUndZNg==
-    type: kubernetes.io/glusterfs  
+apiVersion: v1
+kind: Secret
+metadata:
+	name: heketi-secret
+	namespace: esdata
+data:
+  # base64 encoded password. E.g.: echo -n "mypassword" | base64
+	key: TFRTTkd6TlZJOEpjUndZNg==
+type: kubernetes.io/glusterfs  
 
 
 ```    
@@ -400,20 +400,20 @@ heketi-cli topology load --json=topology-sample.json
 
 ```yaml  
     
-	   kind: PersistentVolumeClaim
-	   apiVersion: v1
-	   metadata:
-	     name: es-data-pvc
-	     namespace: esdata
-     	     annotations:
-	        volume.beta.kubernetes.io/storage-class: "glusterfs-test-zrj"
-	   spec:
-	     accessModes:
-		- ReadWriteMany
-	     resources:
-		requests:
-		  storage: 2Gi
-	     #storageClassName: glusterfs-test-zrj  
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+   name: es-data-pvc
+   namespace: esdata
+   annotations:
+	volume.beta.kubernetes.io/storage-class: "glusterfs-test-zrj"
+spec:
+   accessModes:
+	 - ReadWriteMany
+   resources:
+	requests:
+	  storage: 2Gi
+  #storageClassName: glusterfs-test-zrj  
   
 ```  
   
