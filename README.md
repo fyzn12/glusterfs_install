@@ -138,7 +138,7 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # glusterfs集群搭建
 
-> 前言，目前网络上给出的glusterfs的部署有三种方式：
+> 前言，目前网络上给出的glusterfs的部署有三种方式：       
 > 1、	在kubernetes中部署glusterfs-server     
 > 2、	基于gluster-kubernetes源码部署      
 https://github.com/gluster/gluster-kubernetes.git       
@@ -194,7 +194,7 @@ https://github.com/gluster/gluster-kubernetes.git
 >> ```systemctl enable glusterd```
 
 > 2、 宿主机(master节点)上执行，或者任一节点
->> 执行  
+>> 执行(在k8s-01上执行以下命令)  
 >> ```gluster peer probe k8s-02```      
 >> ```gluster peer probe k8s-03```
 
@@ -384,14 +384,14 @@ heketi-cli topology load --json=topology-sample.json
 
     ---  
     apiVersion: v1
-	kind: Secret
-	metadata:
-	  name: heketi-secret
-	  namespace: esdata
-	data:
-	  # base64 encoded password. E.g.: echo -n "mypassword" | base64
-	   key: TFRTTkd6TlZJOEpjUndZNg==
-	type: kubernetes.io/glusterfs  
+    kind: Secret
+    metadata:
+       name: heketi-secret
+       namespace: esdata
+    data:
+     # base64 encoded password. E.g.: echo -n "mypassword" | base64
+       key: TFRTTkd6TlZJOEpjUndZNg==
+    type: kubernetes.io/glusterfs  
 
 
 ```    
@@ -401,19 +401,19 @@ heketi-cli topology load --json=topology-sample.json
 ```yaml  
     
 	   kind: PersistentVolumeClaim
-		apiVersion: v1
-		metadata:
-		  name: es-data-pvc
-		  namespace: esdata
-		  annotations:
-		    volume.beta.kubernetes.io/storage-class: "glusterfs-test-zrj"
-		spec:
-		  accessModes:
-		    - ReadWriteMany
-		  resources:
-		    requests:
-		      storage: 2Gi
-		  #storageClassName: glusterfs-test-zrj  
+	   apiVersion: v1
+	   metadata:
+	     name: es-data-pvc
+	     namespace: esdata
+     	     annotations:
+	        volume.beta.kubernetes.io/storage-class: "glusterfs-test-zrj"
+	   spec:
+	     accessModes:
+		- ReadWriteMany
+	     resources:
+		requests:
+		  storage: 2Gi
+	     #storageClassName: glusterfs-test-zrj  
   
 ```  
   
